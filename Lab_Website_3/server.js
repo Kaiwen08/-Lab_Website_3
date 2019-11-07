@@ -184,55 +184,61 @@ app.get("/team_stats", function(req, res) {
     });
 });
 
-app.get('/player_info', function(req,res) {
-  var player_info = 'select id,name from football_players;';
-
-  db.any(player_info)
-
-  .then(function(rows) {
-    res.render('pages/player_info',{
-      my_title: 'Player Info',
-      player_info: rows
+app.get('/player_info', function(req, res)
+{
+  var query = 'select * from football_players;';
+  db.any(query) 
+    .then(function (rows) {
+      res.render('pages/player_info', {
+        my_title: "Player Info",
+        data: rows,
+        color: '',
+        color_msg: ''
+      })
     })
-  })
-  .catch(function(err) {
-    req.flash('error', err);
-    res.render('pages/player_info', {
-      my_title: 'Player Info',
-    })
-  })
+    .catch(function (err){
+            console.log(err);
+            res.render('pages/player_info', {
+                title: 'Player Info',
+                data: '',
+                color: '',
+                color_msg: ''
+            })
+      })
 });
 
-app.get('/player_info/select_player', function(req,res){
-  var id = req.query.player_choice;
-  var player_1 = 'select id,name from football_players;';
-  var player_2 = "select * from football_players where name='"+id+"';";
-  var player_3 = "select count(*) from football_games where (select id from football_players where name = '"+ident+"')= any(players);"
-
-  db.task('get-everything', task=> {
-    return task.batch([
-      task.any(player_1),
-      task.any(player_2),
-      task.any(player_3)
+app.get('/player_info/select_player', function(req, res)
+{
+  var player = req.query.player_choice;
+  var players = 'select * from football_players;';
+  var games = 'select count(*) from football_games where players = any(' + player + ');';
+  db.task('get-everything', task => {
+    return task.batch ([
+      task.any(players),
+      task.any(games)
     ]);
   })
-
-  .then(data => {
-    res.render('pages/player_info',{
-      my_title: "Player Info",
-      player_info: data[0],
-      player_data: data[1][0],
-      player_games: data[2][0].count
+    .then(data => {
+      res.render('pages/player_info', {
+        my_title: "Player Info",
+        players: data[0],
+        games: data[1],
+        color: '',
+        color_msg: ''
+      })
     })
-  })
-  .catch(error => {
-    req.flash('error',err);
-    res.render('pages/player_info', {
-      my_title: 'Player Info',
-    })
-  })
+    .catch(error => {
+        // display error message in case an error
+            console.log(err);
+            res.render('pages/player_info', {
+                title: 'Player Info',
+                players: '',
+                games: '',
+                color: '',
+                color_msg: ''
+            })
+      });
 });
-
 /*Add your other get/post request handlers below here: */
 
 /*********************************
